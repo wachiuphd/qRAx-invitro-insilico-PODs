@@ -1,15 +1,16 @@
 library(tidyverse)
 library(readxl)
 library(ctxR)
+datafolder <- "data"
+resultsfolder <- "results"
 
-## Get DTXSID from Comptox Dashboard
+## Get DTXSID from Comptox Dashboard for each PPRTV
 my_key <- '01cbab76-904f-11ee-92b7-325096b39f47'
 register_ctx_api_key(key=my_key)
-pprtv <- read_excel("03282025 PPRTV with Read-across-Oral-PODs.xlsx",sheet=2)
+pprtv <- read_excel(file.path(datafolder,"03282025 PPRTV with Read-across-Oral-PODs.xlsx"),sheet=2)
 pprtv.CASRN.search <- chemical_equal_batch(word_list = (pprtv$CASRN))
-pprtv.CASRN.search.valid <- pprtv.CASRN.search$valid
-pprtv.CASRN.search.details<-get_chemical_details_batch(DTXSID = pprtv.CASRN.search.valid$dtxsid)
-pprtv.CASRN.search.valid <- left_join(pprtv.CASRN.search.valid,
+pprtv.CASRN.search.details<-get_chemical_details_batch(DTXSID = pprtv.CASRN.search$dtxsid)
+pprtv.CASRN.search.valid <- left_join(pprtv.CASRN.search,
                                       pprtv.CASRN.search.details)
 names(pprtv.CASRN.search.valid)[names(pprtv.CASRN.search.valid)=="casrn"]<-"CASRN"
 names(pprtv.CASRN.search.valid)[names(pprtv.CASRN.search.valid)=="dtxsid"]<-"DTXSID"
@@ -19,7 +20,7 @@ pprtv <- left_join(pprtv,pprtv.CASRN.search.valid)
 #write.csv(pprtv,"PPRTV-all-substances.csv",row.names=FALSE)
 #pprtv <- subset(pprtv,!is.na(DTXSID) & !is.na(POD))
 pprtv$`POD-HED.lb` <- pprtv$`POD-HED`/(pprtv$UF_L*pprtv$UF_S*pprtv$UF_D)
-write.csv(pprtv,"PPRTV-for-comparison-withUFD.csv",row.names = FALSE)
+# write.csv(pprtv,"PPRTV-for-comparison-withUFD.csv",row.names = FALSE)
 
 ## ToxCast assays
 toxcast.dat <- pprtv
@@ -56,7 +57,7 @@ ggplot(toxcast.dat)+geom_point(aes(x=`POD-HED`,y=HED.active.50))+
   scale_x_log10(limits=c(1e-5,100))+scale_y_log10(limits=c(1e-5,100))+
   ggtitle("PPRTV vs. ToxCast")+
   geom_abline(slope=1,intercept=c(0,-1,1),linetype=c("dashed","dotted","dotted"))
-ggsave("PPRTV.ToxCast-withUFD.pdf",height=6,width=6)
+# ggsave("PPRTV.ToxCast-withUFD.pdf",height=6,width=6)
 summary(lm(log10(HED.active.50)~log10(`POD-HED`),data=toxcast.dat))
 summary(lm(log10(HED.active.50)-log10(`POD-HED`)~0,data=toxcast.dat))
 summary(lm(log10(HED.active.50)-log10(`POD-HED`)~1,data=toxcast.dat))
@@ -67,45 +68,13 @@ summary(lm(log10(HED.active.05)~log10(`POD-HED.lb`),data=toxcast.dat))
 summary(lm(log10(HED.active.05)-log10(`POD-HED.lb`)~0,data=toxcast.dat))
 summary(lm(log10(HED.active.05)-log10(`POD-HED.lb`)~1,data=toxcast.dat))
 
-## TTC  
-ttc.dat <- read.csv("TTCDataMart.csv")
-names(ttc.dat)[names(ttc.dat)=="DSSTox_Substance_ID"] <- "DTXSID"
-ttc.dat$TTC_gen <- NA
-ttc.dat$TTC_gen[ttc.dat$Cramer_Decision_QSAR_Ready=="Cramer Class I"] <- 0.03
-ttc.dat$TTC_gen[ttc.dat$Cramer_Decision_QSAR_Ready=="Cramer Class II"] <- 0.009
-ttc.dat$TTC_gen[ttc.dat$Cramer_Decision_QSAR_Ready=="Cramer Class III"] <- 0.0015
-ttc.dat$TTC_rd <- NA
-ttc.dat$TTC_rd[ttc.dat$Cramer_Decision_QSAR_Ready=="Cramer Class I"] <- 0.13
-ttc.dat$TTC_rd[ttc.dat$Cramer_Decision_QSAR_Ready=="Cramer Class II"] <- 0.019
-ttc.dat$TTC_rd[ttc.dat$Cramer_Decision_QSAR_Ready=="Cramer Class III"] <- 0.003
-# Tox Values
-ttc.dat$TTC_HEDgen <- ttc.dat$TTC_gen * 100 * 0.25 # undo uncertainty factor, assume rat to convert to HED
-ttc.dat$TTC_HEDrd <- ttc.dat$TTC_rd * 100 * 0.25 # undo uncertainty factor, assume rat to convert to HED
-ttc.dat$TTC_HEDmin <- pmin(ttc.dat$TTC_HEDgen,ttc.dat$TTC_HEDrd,na.rm=T)
-ttc.dat <- left_join(pprtv,ttc.dat,by="DTXSID")
-ttc.dat <- ttc.dat[,-which("CASRN.y"==names(ttc.dat))]
-ttc.dat <- rename(ttc.dat,CASRN = CASRN.x)
-cat("TTC missing",sum(is.na(ttc.dat$TTC_HEDmin)),"out of",nrow(pprtv),"\n")
-ggplot(ttc.dat)+geom_point(aes(x=`POD-HED`,y=TTC_HEDmin))+
-  geom_errorbarh(aes(xmin=`POD-HED.lb`,xmax=`POD-HED`,y=TTC_HEDmin))+
-  scale_x_log10(limits=c(1e-5,100))+scale_y_log10(limits=c(1e-5,100))+
-  ggtitle("PPRTV vs. TTC")+
-  geom_abline(slope=1,intercept=c(0,-1,1),linetype=c("dashed","dotted","dotted"))
-ggsave("PPRTV.TTC-withUFD.pdf",height=6,width=6)
-summary(lm(log10(TTC_HEDmin)~log10(`POD-HED`),data=ttc.dat))
-summary(lm(log10(TTC_HEDmin)-log10(`POD-HED`)~0,data=ttc.dat))
-summary(lm(log10(TTC_HEDmin)-log10(`POD-HED`)~1,data=ttc.dat))
-summary(lm(log10(TTC_HEDmin)~log10(`POD-HED.lb`),data=ttc.dat))
-summary(lm(log10(TTC_HEDmin)-log10(`POD-HED.lb`)~0,data=ttc.dat))
-summary(lm(log10(TTC_HEDmin)-log10(`POD-HED.lb`)~1,data=ttc.dat))
-
 ## CTV
 ctv.input <- data.frame(CAS=pprtv$CASRN,
                         SMILES=pprtv$qsarReadySmiles,
                         Name.Check=pprtv$Chemical,
                         AVERAGE_MASS=pprtv$monoisotopicMass)
-# write.csv(ctv.input,"PPRTV-CTV-input.csv",row.names=FALSE)
-ctv.dat <- as_tibble(read.csv("PPRTV-CTV_ToxValuePredictions.csv"))
+write.csv(ctv.input,file.path(datafolder,"PPRTV-CTV-input.csv",row.names=FALSE))
+ctv.dat <- as_tibble(read.csv(file.path(datafolder,"PPRTV-CTV_ToxValuePredictions.csv")))
 ctv.dat <- rename(ctv.dat,qsarReadySmiles = SMILES)
 ctv.dat <- rename(ctv.dat,CASRN = CAS)
 ctv.dat <- subset(ctv.dat,tv %in% c("RfDNOAEL","RfDBMDL"))
