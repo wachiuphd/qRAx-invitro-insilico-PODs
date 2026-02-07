@@ -1,14 +1,14 @@
 library(tidyverse)
 library(GGally)
 library(scales)
-
-res.wide.df <- read.csv("PODs.bychem.source-withUFD.csv")
+resultsfolder <- "results"
+res.wide.df <- read.csv(file.path(resultsfolder,"PODs.bychem.source-withUFD.csv"))
 res.wide.df$Chemical <- factor(res.wide.df$Chemical,
                             levels=res.wide.df$Chemical[order(res.wide.df$Chemical)])
 res.wide.df$CASRN <- factor(res.wide.df$CASRN,
                        levels=res.wide.df$CASRN[order(res.wide.df$Chemical)])
 
-res.df <- read.csv("PODs.bychem-withUFD.csv")
+res.df <- read.csv(file.path(resultsfolder,"PODs.bychem-withUFD.csv"))
 res.df$Chemical <- factor(res.df$Chemical,
                                levels=res.wide.df$Chemical[order(res.wide.df$Chemical)])
 res.df$CASRN <- factor(res.df$CASRN,
@@ -54,7 +54,7 @@ psuccess <-
     ggtitle("Successful PODs out of 41 attempted substances")+
     xlab("")+ylab("n success (%)")+geom_hline(yintercept = 41,linetype="dashed")
 print(psuccess)
-ggsave("Fig2-success.pdf",psuccess,height=4,width=6,scale=0.75)
+ggsave(file.path(resultsfolder,"Fig3A-success.pdf"),psuccess,height=4,width=6,scale=0.75)
 
 chem.names <- as.character(res.df$Chemical)
 names(chem.names)<-res.df$CASRN
@@ -66,94 +66,81 @@ ppods <-
     facet_wrap(~CASRN,labeller=labeller(CASRN=chem.names),ncol=3)+
     scale_x_log10("Human Equivalent Dose POD (mg/kg-d)")
 print(ppods)
-ggsave("Fig3-PODs.bychem.pdf",ppods,height=10,width=6,scale=1.5)
+ggsave(file.path(resultsfolder,"Fig2-PODs.bychem.pdf"),ppods,height=10,width=6,scale=1.5)
 
-## Most sensitive
-
+## Most sensitive - median estimates
+varnames <- c(pod.med_von.Borries="QSAR (von Borries)",
+              pod.med_Kvasnicka="QSAR (Kvasnicka)",
+              pod.med_CTV="QSAR (Wignall)",
+              pod.med_ToxCast="IVIVE (ToxCast)",
+              pod.med_Aurisano="ToxValDB (Aurisano)",
+              pod.med_PPRTV="qRAx (PPRTV)")
 min.pods <- data.frame(
-  name=rev(c("QSAR (von Borries)",
-             "QSAR (Kvasnicka)",
-             "QSAR (Wignall)",
-             "IVIVE (ToxCast)",
-             "ToxValDB (Aurisano)",
-             "qRAx (PPRTV)")),
-  value=table(apply(res.wide.df[,c(5,8,11,7,9,10)],1,which.min))[paste0(1:6)]
+  var=names(res.wide.df[,5:10]),
+  value=as.numeric(table(apply(res.wide.df[,5:10],1,which.min)))
 ) 
-min.pods$name <- factor(min.pods$name,
-                      levels=c("QSAR (von Borries)",
-                               "QSAR (Kvasnicka)",
-                               "QSAR (Wignall)",
-                               "IVIVE (ToxCast)",
-                               "ToxValDB (Aurisano)",
-                               "qRAx (PPRTV)"))
+min.pods$name <- factor(as.character(varnames[min.pods$var]),
+                      levels=as.character(varnames))
 pmin <-
   ggplot(min.pods)+
-  geom_col(aes(x=name,y=value.Freq,fill=name))+
-  geom_label(aes(x=name,y=value.Freq,label=paste0(round(100*value.Freq/41),"%")))+
+  geom_col(aes(x=name,y=value,fill=name))+
+  geom_label(aes(x=name,y=value,label=paste0(round(100*value/41),"%")))+
   coord_flip()+scale_fill_viridis_d(direction = -1,end=0.9)+
   theme_bw()+theme(legend.position = "none")+
   ggtitle("Minimum PODs")+
   xlab("")+ylab("Frequency out of 41 (%)")
 print(pmin)
-ggsave("Fig3B-mostsens.med.pdf",pmin,height=4,width=6,scale=0.75)
+ggsave(file.path(resultsfolder,"Fig3B-mostsens.med.pdf"),pmin,height=4,width=6,scale=0.75)
 
+## Lower bounds
+varnames.lb <- c(pod.med.lb_von.Borries="QSAR (von Borries)",
+              pod.med.lb_Kvasnicka="QSAR (Kvasnicka)",
+              pod.med.lb_CTV="QSAR (Wignall)",
+              pod.med.lb_ToxCast="IVIVE (ToxCast)",
+              pod.med.lb_Aurisano="ToxValDB (Aurisano)",
+              pod.med.lb_PPRTV="qRAx (PPRTV)")
 min.pods.lb <- data.frame(
-  name=rev(c("QSAR (von Borries)",
-             "QSAR (Kvasnicka)",
-             "QSAR (Wignall)",
-             "IVIVE (ToxCast)",
-             "ToxValDB (Aurisano)",
-             "qRAx (PPRTV)")),
-  value=table(apply(res.wide.df[,7+c(5,8,11,7,9,10)],1,which.min))[paste0(1:6)]
+  var=names(res.wide.df[,11:16]),
+  value=as.numeric(table(apply(res.wide.df[,11:16],1,which.min))[paste(1:6)])
 ) 
-min.pods.lb$value.Freq[is.na(min.pods.lb$value.Freq)]<-0
-min.pods.lb$name <- factor(min.pods.lb$name,
-                        levels=c("QSAR (von Borries)",
-                                 "QSAR (Kvasnicka)",
-                                 "QSAR (Wignall)",
-                                 "IVIVE (ToxCast)",
-                                 "ToxValDB (Aurisano)",
-                                 "qRAx (PPRTV)"))
+min.pods.lb$value[is.na(min.pods.lb$value)]<-0
+min.pods.lb$name <- factor(as.character(varnames.lb[min.pods.lb$var]),
+                        levels=as.character(varnames.lb))
 pmin.lb <-
   ggplot(min.pods.lb)+
-  geom_col(aes(x=name,y=value.Freq,fill=name))+
-  geom_label(aes(x=name,y=value.Freq,label=paste0(round(100*value.Freq/41),"%")))+
+  geom_col(aes(x=name,y=value,fill=name))+
+  geom_label(aes(x=name,y=value,label=paste0(round(100*value/41),"%")))+
   coord_flip()+scale_fill_viridis_d(direction = -1,end=0.9)+
   theme_bw()+theme(legend.position = "none")+
   ggtitle("Minimum PODs (lower bound)")+
   xlab("")+ylab("Frequency out of 41 (%)")
 print(pmin.lb)
-ggsave("Fig3B-mostsens.lb.pdf",pmin.lb,height=4,width=6,scale=0.75)
+ggsave(file.path(resultsfolder,"FigS3A-mostsens.lb.pdf"),pmin.lb,height=4,width=6,scale=0.75)
 
-
+## Lower bound PPRTV with median for others
+varnames.lb.med <- c(pod.med_von.Borries="QSAR (von Borries)",
+                 pod.med_Kvasnicka="QSAR (Kvasnicka)",
+                 pod.med_CTV="QSAR (Wignall)",
+                 pod.med_ToxCast="IVIVE (ToxCast)",
+                 pod.med_Aurisano="ToxValDB (Aurisano)",
+                 pod.med.lb_PPRTV="qRAx (PPRTV)")
 min.pods.lb.med <- data.frame(
-  name=rev(c("QSAR (von Borries)",
-             "QSAR (Kvasnicka)",
-             "QSAR (Wignall)",
-             "IVIVE (ToxCast)",
-             "ToxValDB (Aurisano)",
-             "qRAx (PPRTV)")),
-  value=table(apply(res.wide.df[,c(12,8,11,7,9,10)],1,which.min))[paste0(1:6)]
+  var=names(res.wide.df[,c(6:11)]),
+  value=as.numeric(table(apply(res.wide.df[,c(6:11)],1,which.min))[paste(1:6)])
 ) 
-min.pods.lb.med$value.Freq[is.na(min.pods.lb$value.Freq)]<-0
-min.pods.lb.med$name <- factor(min.pods.lb.med$name,
-                           levels=c("QSAR (von Borries)",
-                                    "QSAR (Kvasnicka)",
-                                    "QSAR (Wignall)",
-                                    "IVIVE (ToxCast)",
-                                    "ToxValDB (Aurisano)",
-                                    "qRAx (PPRTV)"))
-
+min.pods.lb.med$value[is.na(min.pods.lb.med$value)]<-0
+min.pods.lb.med$name <- factor(as.character(varnames.lb.med[min.pods.lb.med$var]),
+                           levels=as.character(varnames.lb.med))
 pmin.lb.med <-
   ggplot(min.pods.lb.med)+
-  geom_col(aes(x=name,y=value.Freq,fill=name))+
-  geom_label(aes(x=name,y=value.Freq,label=paste0(round(100*value.Freq/41),"%")))+
+  geom_col(aes(x=name,y=value,fill=name))+
+  geom_label(aes(x=name,y=value,label=paste0(round(100*value/41),"%")))+
   coord_flip()+scale_fill_viridis_d(direction = -1,end=0.9)+
   theme_bw()+theme(legend.position = "none")+
-  ggtitle("Minimum PODs (PPRTV lb)")+
+  ggtitle("Minimum PODs (PPRTV lower bound)")+
   xlab("")+ylab("Frequency out of 41 (%)")
 print(pmin.lb.med)
-ggsave("Fig3B-mostsens.lb.med.pdf",pmin.lb.med,height=4,width=6,scale=0.75)
+ggsave(file.path(resultsfolder,"FigS3B-mostsens.lb.med.pdf"),pmin.lb.med,height=4,width=6,scale=0.75)
 
 
 ## Confidence intervals
@@ -190,20 +177,14 @@ pcibox<-
   ylab("")+
   theme_bw()+theme(legend.position = "none")
 
-ggsave("Fig4-CI.pdf",pcibox,height=4,width=6,scale=0.75)
-
+ggsave(file.path(resultsfolder,"Fig3C-CI.pdf"),pcibox,height=4,width=6,scale=0.75)
 
 ## point vs. median
 
-res.wide.mat <- res.wide.df[,c(5,8,11,7,9,10)]
-names(res.wide.mat) <- rev(c("QSAR (von Borries)",
-                                    "QSAR (Kvasnicka)",
-                                    "QSAR (Wignall)",
-                                    "IVIVE (ToxCast)",
-                                    "ToxValDB (Aurisano)",
-                                    "qRAx (PPRTV)"))
-res.wide.mat$UF <- res.wide.df[,5]/res.wide.df[,12]
-res.wide.mat$UF.bin <- round(10^(round(2*log10((res.wide.df[,5]/res.wide.df[,12])))/2),-1)
+res.wide.mat <- res.wide.df[,rev(names(varnames))]
+names(res.wide.mat) <- varnames[rev(names(varnames))]
+res.wide.mat$UF <- res.wide.df$pod.med_PPRTV/res.wide.df$pod.med.lb_PPRTV
+res.wide.mat$UF.bin <- round(10^(round(2*log10(res.wide.mat$UF))/2),-1)
 res.wide.mat$UF.bin[res.wide.mat$UF.bin==0] <- 1
 res.wide.mat$UF.bin <- factor(res.wide.mat$UF.bin)
 
@@ -216,6 +197,7 @@ lowerfun <- function(data,mapping) {
 }
 pscat.med <- 
   ggpairs(res.wide.mat,columns = 1:6,aes(color=UF.bin),
+          upper = list(continuous = wrap("cor", method = "spearman")),
           lower = list(continuous = wrap(lowerfun)),
           diag = list(continuous = ggally_blankDiag)
           )+
@@ -223,19 +205,13 @@ pscat.med <-
     ggtitle("Human Equivalent Dose POD (mg/kg-d) [point estimate]")+
     xlab("mg/kg-d")+ylab("mg/kg-d")+
     theme_bw()+theme(panel.grid = element_blank())
-ggsave("Fig4-A-point-median.pdf",pscat.med,height=6,width=6,scale=1.4)
+ggsave(file.path(resultsfolder,"Fig5-point-median.pdf"),pscat.med,height=6,width=6,scale=1.4)
 
 ## lb vs. lb
-
-res.wide.lb.mat <- res.wide.df[,7+c(5,8,11,7,9,10)]
-names(res.wide.lb.mat) <- rev(c("QSAR (von Borries)",
-                             "QSAR (Kvasnicka)",
-                             "QSAR (Wignall)",
-                             "IVIVE (ToxCast)",
-                             "ToxValDB (Aurisano)",
-                             "qRAx (PPRTV)"))
-res.wide.lb.mat$UF <- res.wide.df[,5]/res.wide.df[,12]
-res.wide.lb.mat$UF.bin <- round(10^(round(2*log10((res.wide.df[,5]/res.wide.df[,12])))/2),-1)
+res.wide.lb.mat <- res.wide.df[,rev(names(varnames.lb))]
+names(res.wide.lb.mat) <- varnames.lb[rev(names(varnames.lb))]
+res.wide.lb.mat$UF <- res.wide.df$pod.med_PPRTV/res.wide.df$pod.med.lb_PPRTV
+res.wide.lb.mat$UF.bin <- round(10^(round(2*log10(res.wide.lb.mat$UF))/2),-1)
 res.wide.lb.mat$UF.bin[res.wide.lb.mat$UF.bin==0] <- 1
 res.wide.lb.mat$UF.bin <- factor(res.wide.lb.mat$UF.bin)
 
@@ -248,6 +224,7 @@ lowerfun.lb <- function(data,mapping) {
 }
 pscat.lb <-
   ggpairs(res.wide.lb.mat,columns = 1:6,aes(color=UF.bin),
+          upper = list(continuous = wrap("cor", method = "spearman")),
           lower = list(continuous = wrap(lowerfun.lb)),
           diag = list(continuous = ggally_blankDiag)
           )+
@@ -255,20 +232,14 @@ pscat.lb <-
   ggtitle("Human Equivalent Dose POD (mg/kg-d) [lower confidence bound]")+
     xlab("mg/kg-d")+ylab("mg/kg-d")+
     theme_bw()+theme(panel.grid = element_blank())
-ggsave("Fig4-B-lb-lb.pdf",pscat.lb,height=6,width=6,scale=1.4)
+ggsave(file.path(resultsfolder,"FigS4-lb-lb.pdf"),pscat.lb,height=6,width=6,scale=1.4)
 
 
 ## PPRTV lb vs.med
-
-res.wide.lb.med.mat <- res.wide.df[c(12,8,11,7,9,10)]
-names(res.wide.lb.med.mat) <- rev(c("QSAR (von Borries)",
-                                "QSAR (Kvasnicka)",
-                                "QSAR (Wignall)",
-                                "IVIVE (ToxCast)",
-                                "ToxValDB (Aurisano)",
-                                "qRAx (PPRTV)"))
-res.wide.lb.med.mat$UF <- res.wide.df[,5]/res.wide.df[,12]
-res.wide.lb.med.mat$UF.bin <- round(10^(round(2*log10((res.wide.df[,5]/res.wide.df[,12])))/2),-1)
+res.wide.lb.med.mat <- res.wide.df[,rev(names(varnames.lb.med))]
+names(res.wide.lb.med.mat) <- varnames.lb.med[rev(names(varnames.lb.med))]
+res.wide.lb.med.mat$UF <- res.wide.df$pod.med_PPRTV/res.wide.df$pod.med.lb_PPRTV
+res.wide.lb.med.mat$UF.bin <- round(10^(round(2*log10(res.wide.lb.med.mat$UF))/2),-1)
 res.wide.lb.med.mat$UF.bin[res.wide.lb.med.mat$UF.bin==0] <- 1
 res.wide.lb.med.mat$UF.bin <- factor(res.wide.lb.med.mat$UF.bin)
 
@@ -281,6 +252,7 @@ lowerfun.lb.med <- function(data,mapping) {
 }
 pscat.lb.med<-
   ggpairs(res.wide.lb.med.mat,columns = 1:6,aes(color=UF.bin),
+          upper = list(continuous = wrap("cor", method = "spearman")),
           lower = list(continuous = wrap(lowerfun.lb.med)),
           diag = list(continuous = ggally_blankDiag)
           )+
@@ -288,9 +260,9 @@ pscat.lb.med<-
   ggtitle("Human Equivalent Dose POD (mg/kg-d) [PPRTV lb vs. point]")+
     xlab("mg/kg-d")+ylab("mg/kg-d")+
     theme_bw()+theme(panel.grid = element_blank())
-ggsave("Fig4-C-lb-med.pdf",pscat.lb.med,height=6,width=6,scale=1.4)
+ggsave(file.path(resultsfolder,"FigS5-lb-med.pdf"),pscat.lb.med,height=6,width=6,scale=1.4)
 
-#### Within 10-fold of qRAx
+#### Within 10-fold of qRAx 
 
 res.fold <- pivot_longer(log10(res.wide.mat[,2:6]/res.wide.mat[,1]),cols=1:5)
 res.fold$name <- factor(res.fold$name,
@@ -335,8 +307,8 @@ pfold.lb<-ggplot(res.fold.lb)+
     ylab("")+
     theme_bw()+theme(legend.position = "none")
 
-ggsave("Fig4-fold.pdf",pfold,height=4,width=6,scale=0.75)
-ggsave("Fig4-fold.lb.pdf",pfold.lb,height=4,width=6,scale=0.75)
+ggsave(file.path(resultsfolder,"Fig4A-fold.pdf"),pfold,height=4,width=6,scale=0.75)
+ggsave(file.path(resultsfolder,"Fig4B-fold.lb.pdf"),pfold.lb,height=4,width=6,scale=0.75)
 
 
 #### Combinations
@@ -371,7 +343,7 @@ psuccess.comb.2 <-
   xlab("")+ylab("n success (%)")+geom_hline(yintercept = 41,linetype="dashed")
 print(psuccess.comb.2)
 
-ggsave("Fig5A-pairs.pdf",psuccess.comb.2,height=4,width=6,scale=1.25)
+ggsave(file.path(resultsfolder,"FigS1-pairs.pdf"),psuccess.comb.2,height=4,width=6,scale=1.25)
 
 # trios
 combinations.3 <- as.data.frame(t(combn(6,3)))
@@ -402,53 +374,5 @@ psuccess.comb.3 <-
   xlab("")+ylab("n success (%)")+geom_hline(yintercept = 41,linetype="dashed")
 print(psuccess.comb.3)
 
-ggsave("Fig5B-three.pdf",psuccess.comb.3,height=6,width=6,scale=1.5)
+ggsave(file.path(resultsfolder,"FigS2-three.pdf"),psuccess.comb.3,height=6,width=6,scale=1.5)
 
-#### Comparison to PPRTV
-
-res.ratio.df <- pivot_longer(cbind(res.wide.df[,1:4],
-                                   res.wide.df[,c(8,11,7,9,10)]/
-                                     res.wide.df[,5]),cols=5:9)
-res.ratio.df$name <- gsub("pod.med_","",res.ratio.df$name)
-res.ratio.df$name[res.ratio.df$name=="PPRTV"] <- "qRAx (PPRTV)"
-res.ratio.df$name[res.ratio.df$name=="Aurisano"] <- "ToxValDB (Aurisano)"
-res.ratio.df$name[res.ratio.df$name=="ToxCast"] <- "IVIVE (ToxCast)"
-res.ratio.df$name[res.ratio.df$name=="CTV"] <- "QSAR (Wignall)"
-res.ratio.df$name[res.ratio.df$name=="Kvasnicka"] <- "QSAR (Kvasnicka)"
-res.ratio.df$name[res.ratio.df$name=="von.Borries"] <- "QSAR (von Borries)"
-res.ratio.df$name <- factor(res.ratio.df$name,
-                           levels=c("QSAR (von Borries)",
-                                    "QSAR (Kvasnicka)",
-                                    "QSAR (Wignall)",
-                                    "IVIVE (ToxCast)",
-                                    "ToxValDB (Aurisano)",
-                                    "qRAx (PPRTV)"))
-ggplot(res.ratio.df)+geom_boxplot(aes(x=name,y=value))+
-  geom_hline(yintercept=1,linetype="dashed")+
-  scale_y_log10()+coord_flip()
-
-res.ratio.lb.df <- pivot_longer(cbind(res.wide.df[,1:4],
-                                   res.wide.df[,7+c(8,11,7,9,10)]/
-                                     res.wide.df[,7+5]),cols=5:9)
-res.ratio.lb.df$name <- gsub("pod.med.lb_","",res.ratio.lb.df$name)
-res.ratio.lb.df$name[res.ratio.lb.df$name=="PPRTV"] <- "qRAx (PPRTV)"
-res.ratio.lb.df$name[res.ratio.lb.df$name=="Aurisano"] <- "ToxValDB (Aurisano)"
-res.ratio.lb.df$name[res.ratio.lb.df$name=="ToxCast"] <- "IVIVE (ToxCast)"
-res.ratio.lb.df$name[res.ratio.lb.df$name=="CTV"] <- "QSAR (Wignall)"
-res.ratio.lb.df$name[res.ratio.lb.df$name=="Kvasnicka"] <- "QSAR (Kvasnicka)"
-res.ratio.lb.df$name[res.ratio.lb.df$name=="von.Borries"] <- "QSAR (von Borries)"
-res.ratio.lb.df$name <- factor(res.ratio.lb.df$name,
-                            levels=c("QSAR (von Borries)",
-                                     "QSAR (Kvasnicka)",
-                                     "QSAR (Wignall)",
-                                     "IVIVE (ToxCast)",
-                                     "ToxValDB (Aurisano)",
-                                     "qRAx (PPRTV)"))
-ggplot(res.ratio.lb.df)+geom_boxplot(aes(x=name,y=value))+
-  geom_hline(yintercept=1,linetype="dashed")+
-  scale_y_log10()+coord_flip()
-
-## min POD combinations...
-
-res.val.mat <- res.wide.mat[,-(7:8)]
-apply(res.val.mat[,as.numeric(combinations.2[j,1:2])],1,min,na.rm=T)

@@ -1,0 +1,42 @@
+"CAS","SMILES","Name.Check","AVERAGE_MASS"
+"7784-30-7","[Al+3].[O-]P([O-])([O-])=O","Aluminum Phosphate Salts",121.934959
+"19406-51-0","CC1=C(C=C(N)C=C1[N+]([O-])=O)[N+]([O-])=O","4-Amino-2,6-Dinitrotoluene",197.043655717
+"35572-78-2","CC1=C(C=C(C=C1N)[N+]([O-])=O)[N+]([O-])=O","2-Amino-4,6-Dinitrotoluene",197.043655717
+"131-74-8","[NH4+].[O-]C1=C(C=C(C=C1[N+]([O-])=O)[N+]([O-])=O)[N+]([O-])=O","Ammonium Picrate",246.023648549
+"192-97-2","C1=CC2=C3C=CC=C4C=CC5=CC=CC(=C2C=C1)C5=C34","Benzo[e]pyrene (BeP)",252.0939003864
+"243-17-4","C1C2=CC=CC=C2C2=CC3=CC=CC=C3C=C12","2,3-Benzofluorene",216.0939003864
+"107-04-0","ClCCBr","1-Bromo-2-chloroethane",141.918491
+"1073-06-9","FC1=CC(Br)=CC=C1","1-Bromo-3-fluorobenzene",173.948041
+"460-00-4","FC1=CC=C(Br)C=C1","p-Bromofluorobenzene",173.948041
+"762-75-4","CC(C)(C)OC=O","tert-Butyl Formate",102.068079562
+"72-54-8","ClC(Cl)C(C1=CC=C(Cl)C=C1)C1=CC=C(Cl)C=C1","p,p'-DDD",317.9536611
+"132-65-0","S1C2=C(C=CC=C2)C2=C1C=CC=C2","Dibenzothiophene",184.034671432
+"156-59-2","Cl\C=C/Cl","cis-1,2-Dichloroethylene",95.9533555
+"420-45-1","CC(C)(F)F","2,2-Difluoropropane",80.043756519
+"618-87-1","NC1=CC(=CC(=C1)[N+]([O-])=O)[N+]([O-])=O","3,5-Dinitroaniline",183.028005653
+"111-71-7","CCCCCCC=O","n-Heptanal",114.104465071
+"319-86-8","Cl[C@H]1[C@H](Cl)[C@@H](Cl)[C@H](Cl)[C@H](Cl)[C@@H]1Cl","delta-Hexachlorocyclohexane",287.8600664
+"108-11-2","CC(C)CC(C)O","4-Methyl-2-Pentanol",102.104465071
+"10159-46-3","CNP(=O)(N(C)C)N(C)C","Pentamethylphosphoramide (PMPA)",165.103099145
+"198-55-0","C1=CC2=C3C(=C1)C1=CC=CC4=C1C(=CC=C4)C3=CC=C2","Perylene",252.0939003864
+"6165-52-2","CC(C1=CC=CC=C1)C1=CC=C(C)C=C1C","1-Phenyl-1-(2,4-dimethylphenyl)-ethane (PXE)",210.1408505796
+"3717-68-8","CC(C1=CC=CC=C1)C1=CC=C(C)C=C1","1-Phenyl-1-(4-methylphenyl)-ethane (PTE)",196.1252005152
+"88-89-1","OC1=C(C=C(C=C1[N+]([O-])=O)[N+]([O-])=O)[N+]([O-])=O","Picric Acid (2,4,6-Trinitrophenol)",228.997099449
+"16853-36-4","CNP(=O)(NC)N(C)C","N,N,N',N'' Tetramethylphosphoramide (TMPA)",151.087449081
+"2687-25-4","CC1=C(N)C(N)=CC=C1","2,3-Toluenediamine",122.08439833
+"496-72-0","CC1=CC=C(N)C(N)=C1","3,4-Toluenediamine",122.08439833
+"95-55-6","NC1=C(O)C=CC=C1","o-Aminophenol",109.052763849
+"98-06-6","CC(C)(C)C1=CC=CC=C1","tert-Butylbenzene",134.1095504508
+"135-98-8","CCC(C)C1=CC=CC=C1","sec-Butylbenzene",134.1095504508
+"506-68-3","BrC#N","Cyanogen Bromide",104.921412
+"108-36-1","BrC1=CC(Br)=CC=C1","1,3-Dibromobenzene",233.867976
+"142-82-5","CCCCCCC","n-Heptane",100.1252005152
+"993-13-5","CP(O)(O)=O","Methyl Phosphonic Acid",95.997631019
+"96-91-3","NC1=C(O)C(=CC(=C1)[N+]([O-])=O)[N+]([O-])=O","Picramic Acid (2-Amino-4,6-dinitrophenol)",199.022920273
+"103-65-1","CCCC1=CC=CC=C1","n-Propylbenzene",120.0939003864
+"528-29-0","[O-][N+](=O)C1=C(C=CC=C1)[N+]([O-])=O","1,2-Dinitrobenzene",168.017106617
+"100-25-4","[O-][N+](=O)C1=CC=C(C=C1)[N+]([O-])=O","1,4-Dinitrobenzene",168.017106617
+"463-56-9","SC#N","Thiocyanic Acid",58.98297021
+"79-20-9","COC(C)=O","Methyl Acetate",74.036779433
+"1031-07-8","ClC1=C(Cl)C2(Cl)C3COS(=O)(=O)OCC3C1(Cl)C2(Cl)Cl","Endosulfan Sulfate",419.811796
+"113-00-8","NC(N)=N","Guanidine",59.048347173
